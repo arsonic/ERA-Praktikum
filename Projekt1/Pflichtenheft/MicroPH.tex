@@ -1,0 +1,108 @@
+%
+% Hello! Here's how this works:
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+% If you're new to LaTeX, the wikibook at
+% http://en.wikibooks.org/wiki/LaTeX
+% is a great place to start, and there are some examples in this
+% document, too.
+%
+% Enjoy!
+%
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\title{Pflichtenheft Mikroprogrammierung}
+\author{Arseniy Vershinin, Jonathan Kienzle, Amar Saljic}
+\date{2 Mai, 2013}
+
+\begin{document}
+\maketitle
+
+\section{Aufgabenverteilung}
+
+{\bf Projektleiter:} Arseniy Vershinin\newline
+{\bf Verantwortlicher Dokumentation:} Amar Saljic\newline
+{\bf Verantwortlicher Vortrag:} Jonathan Kienzle
+
+\section{Betreuer}
+
+Florian Gerlach - gerlachf@in.tum.de
+
+\section{Aufgabenkurzbeschreibung}
+
+Für einen mikroprogrammierbaren Rechner soll die Funktion {\it strlen}, welche die Länge einer Zeichenkette in Zeichen ermittelt, implementiert werden. Die Funktion soll auf zwei Arten implementiert werden, welche hinsichtlich ihrer Effizienz verglichen werden sollen. Außerdem soll die schnellste Methode zum Löschen einer Zeichenkette bestimmt werden.
+
+\section{Soll-Analyse}
+
+Die zu zählende Zeichenkette liegt im Unicode-Format (16 bit pro Zeichen) im Hauptspeicher und das abschließende Null-Zeichen soll nicht mitgezählt werden.
+
+\newpage
+\noindent
+Die Funktion soll auf folgende zwei Arten umgesetzt werden:
+\begin{enumerate}
+\item Als Mikroprogramm, welches auf die Standardmaschinenbefehle der Zielarchitektur (miziel.ps) zugreift. Die benutzten Standardmaschinenbefehle sollen dabei ebenfalls implementiert werden. Eine Beschreibung der Zielarchitektur befindet sich in der Datei “miziel.ps”
+\item Als spezieller Maschinenbefehl in einem gesonderten Mikroprogramm.
+\end{enumerate}
+
+\section{Ist-Analyse}
+
+Zur Entwicklung stehen uns folgende Hilfsmittel zur Verfügung:	
+\begin{itemize}
+\item Vorlesungsunterlagen der ERA-Vorlesung von Prof. Dr. Arndt Bode aus dem WS 12/13
+\item Der Simulator JMic 1.02 der mikroprogrammierbaren Maschine.
+\item Die “Beschreibung der Zielarchitektur” (miziel.ps), Ausgabe WS 1999/2000
+\end{itemize}	
+
+\section{Zeitplan}
+
+\begin{center}
+  \begin{tabular}{|*{5}{c|}}
+    \hline
+	Aufgabe & Jonathan & Arseniy & Amar & Deadline \\
+    \hline
+   	\multicolumn{1}{|l|}{Pflichtenheft} & 2h & 2h & 2h & 19.05.2013 \\
+    \hline
+    \multicolumn{1}{|l|}{Spezifikation} & 3h & 3h & 3h & 09.06.2013 \\
+    \hline
+    \multicolumn{1}{|l|}{Implementierung} & 12h & 12h & 12h & 30.06.2013 \\
+    \hline
+    \multicolumn{1}{|l|}{Ausarbeitung} & - & 3h & - & 14.07.2013 \\
+    \hline
+    \multicolumn{1}{|l|}{Vortrag} & 2h & - & 3h & TBA \\
+    \hline
+    \multicolumn{1}{|l|}{Protokoll} & 3h & - & - &  \\
+    \hline
+    \multicolumn{1}{|l|}{Summe} & 22h & 20h & 20h &  \\
+    \hline
+    
+    
+  \end{tabular}
+\end{center}
+
+\section{Vertragsverpflichtung}
+
+Folgende Dokumente sollen im Verlauf des Praktikums abgegeben werden:
+\begin{itemize}
+\item Protokolle der jeweiligen Sitzungen
+\item Pflichtenheft
+\item Spezifikation
+\item Dokumentation
+\item Implementierung des Programms 
+\end{itemize}
+
+
+
+\end{document}
