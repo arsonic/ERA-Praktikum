@@ -1,0 +1,141 @@
+%
+% Hello! Here's how this works:
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+% If you're new to LaTeX, the wikibook at
+% http://en.wikibooks.org/wiki/LaTeX
+% is a great place to start, and there are some examples in this
+% document, too.
+%
+% Enjoy!
+%
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{lastpage}
+\usepackage[bottom]{footmisc}
+
+
+\title{Spezifikation Mikroprogrammierung}
+\author{Amar Saljic, Arseniy Vershinin, Jonathan Kienzle}
+\date{08. Juni 2013}
+
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[RE,LO]{\emph{Spezifikation Mikroprogrammierung - Gruppe 50}}
+\renewcommand{\headrulewidth}{0pt} % no line in header area
+\fancyfoot{} % clear all footer fields
+\fancyfoot[LE,RO]{\thepage /\pageref{LastPage}}           % page number in "outer" position of footer line
+%\fancyfoot[RE,LO]{\emph{Spezifikation Mikroprogrammierung - Gruppe 50}} % other info in "inner" position of footer line
+
+\begin{document}
+\maketitle
+
+\thispagestyle{fancy}
+
+\section*{Allgemeines}
+
+Das Programm \textit{strlen} wird auf folgende zwei Arten implementiert: \newline
+1. als Maschinenprogramm\newline
+2. als spezieller Maschinenbefehl in einem gesonderten Mikroprogramm \newline 
+
+\section{Maschinenprogramm}
+
+\subsection{Architektur}
+Die Funktionalität von \textit{strlen} wird als Maschinenprogramm implementiert, welches die folgenden Maschinenbefehle aufruft: 
+
+\begin{itemize}
+\item move
+\item cmp
+\item jmpcc
+\item inc
+\item sub
+\item halt
+\end{itemize}
+Diese werden von der Gruppe, so wie im Dokument \emph{``miziel.ps''} spezifiziert, als Mikroprogramme implementiert. Vor Aufruf des Programms sollte die Startadresse des Zeichenfeldes in \textit{r0} abgelegt werden. Nach Ablauf des Programms steht die Länge der Zeichenkette in \textit{r1}. 
+
+\subsection{Verhalten}
+Der Aufbau des Maschinenprogramms sieht wie folgt aus: 
+\begin {enumerate}
+\item \textit{r1} (Zähler) auf 0 setzen
+\item \textit{r0} (Startadresse) nach \textit{r3} (Zeichenadresse) kopieren
+\item Vergleiche \lbrack \textit{r3}\rbrack \footnotemark[1] \ mit dem Nullzeichen \((0x0000)\), welches das Ende einer Zeichenkette markiert
+\begin {enumerate}
+\item \(\lbrack \textit {r3}\rbrack \ == 0x0000 \rightarrow\) beende Maschinenprogramm
+\item \(\lbrack \textit{r3}\rbrack \hspace{6 pt} \ != 0x0000 \rightarrow\) \textit{r1} (Zähler) um 1 inkrementieren
+\end {enumerate}
+\item \textit{r3} (Zeichenadresse) inkrementieren. Da die Größe einer Hauptspeicherzelle der Zielmaschine genau der Größe eines Unicode-Zeichens entspricht, muss \textit{r3} um 1 inkrementiert werden. 
+\item Springe zu Schritt 3
+\end {enumerate}
+
+\subsection{Alternativer Lösungsansatz}
+Die Länge der Zeichenkette lässt sich über die Differenz von Start -und End-adresse berechnen. Dabei adressiert die Endadresse genau die Zelle, die das Nullzeichen \((0x0000)\) enthält.
+\begin{enumerate}
+\item \textit{r0} (Startadresse des Zeichenfeldes) nach \textit{r1} kopieren
+\item Vergleiche \lbrack \textit{r1}\rbrack \ mit dem Nullzeichen \((0x0000)\)
+\begin{enumerate}
+\item \(\lbrack \textit{r1}\rbrack \ == 0x0000 \rightarrow \) springe zu Schritt 4
+\item \(\lbrack \textit{r1}\rbrack \hspace{6 pt} \ != 0x0000 \rightarrow \textit{r1} \) (Zeichenadresse) um 1 inkrementieren
+\end{enumerate}
+\item Springe zu Schritt 2
+\item Speichere \textit{r1} (Endadresse) \(-\) \textit{r0} (Startadresse) in \textit{r1}
+\item Beende Maschinenprogramm
+\end {enumerate}
+\footnotetext[1]{[\textit{ra}] - Inhalt der Speicherzelle, deren Adresse in Register \textit{ra} abgelegt ist.} 
+\subsection{Analyse der Ansätze}
+Alternative 2 benötigt ein Register weniger, da kein Zähler verwendet wird. Außerdem spart sie in jedem Schleifendurchlauf 4 Takte (IFETCH + inc-Operation), welche in Alternative 1 für die Inkrementierung des Zählers benötigt werden.\newline \newline
+Aufgrund der erhöhten Effizienz wird Alternative 2 implementiert.
+\newpage
+\section{Mikroprogramm}
+
+\subsection{Architektur}
+Das Programm \textit{strlen} wird als eigenständiges Mikroprogramm implementiert, welches die Länge einer gegebenen Zeichenkette berechnet und im Register \textit{r1} speichert. Dabei muss die Startadresse des Zeichenfeldes, wie in den zwei Lösungsansätzen spezifiziert, übergeben werden.
+
+
+\subsection{Verhalten}
+Der Aufbau des Mikroprogramms sieht wie folgt aus: 
+\begin {enumerate}
+\item Startadresse des Zeichenfeldes, welche \emph{als Immidiate} übergeben wird, nach \textit{r1} kopieren (Befehlszähler erhöhen und Hauptspeicher adressieren)
+\item \textit{r1} nach \textit{r8} kopieren, um die Startadresse zu sichern
+\item Vergleiche \lbrack \textit{r1}\rbrack \ mit dem Nullzeichen \((0x0000)\)
+\begin {enumerate}
+\item \(\lbrack \textit{r1}\rbrack \ == 0x0000 \rightarrow \) Springe zu Schritt 5
+\item \(\lbrack \textit{r1}\rbrack \hspace{6 pt} \ != 0x0000 \rightarrow \) \textit{r1} (Zeichenadresse) um 1 inkrementieren
+\end {enumerate}
+\item Springe zu Schritt 3
+\item Speichere \textit{r1} (Endadresse) \(-\) \textit{r8} (Startadresse) in \textit{r1}
+\item Springe zu IFETCH
+\end {enumerate}
+
+\subsection{Alternativer Lösungsansatz}
+Das Argument (Startadresse des Zeichenfeldes) lässt sich alternativ \emph{über ein Register}, welches im Folgenden mit \textit{ra} bezeichnet wird, übergeben. 
+\begin{enumerate}
+\item \textit{ra} (Startadresse des Zeichenfeldes) nach \textit{r1} kopieren
+\item Vergleiche \lbrack \textit{r1}\rbrack \ mit dem Nullzeichen (0x0000)
+\begin{enumerate}
+\item \(\lbrack \textit{r1}\rbrack == 0x0000 \rightarrow \) springe zu IFETCH
+\item \(\lbrack \textit{r1}\rbrack \hspace{6 pt} != 0x0000 \rightarrow \) \textit{r1} (Zeichenadresse) inkrementieren
+\end{enumerate}
+\item Springe zu Schritt 2
+\item Speichere \textit{r1} (Endadresse) \(-\) \textit{ra} (Startadresse) in \textit{r1}
+\item Springe zu IFETCH
+\end {enumerate}
+\subsection{Analyse der Ansätze}
+Alternative 2 bietet dem Maschinenprogrammierer mehr Flexibilität, da er die Startadresse des Zeichenfeldes in einem Register übergeben kann. Mit Alternative 1 müsste er die Startadresse schon vor dem Ausführen des Programms kennen, was häufig nicht der Fall ist.\newline \newline
+Aus den oben genannten Gründen wird Alternative 2 implementiert. 
+
+\end{document}

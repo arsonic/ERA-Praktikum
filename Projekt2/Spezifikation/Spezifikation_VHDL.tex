@@ -1,0 +1,122 @@
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{lastpage}
+
+
+\title{Spezifikation VHDL}
+\author{Amar Saljic, Arseniy Vershinin, Jonathan Kienzle}
+\date{08. Juni 2013}
+
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[RE,LO]{\emph{Spezifikation VHDL - Gruppe 50}}
+\renewcommand{\headrulewidth}{0pt} % no line in header area
+\fancyfoot{} % clear all footer fields
+\fancyfoot[LE,RO]{\thepage /\pageref{LastPage}}           % page number in "outer" position of footer line
+%\fancyfoot[RE,LO]{\emph{Spezifikation VHDL - Gruppe 50}} % other info in "inner" position of footer line
+
+\begin{document}
+\maketitle
+
+\thispagestyle{fancy}
+
+\section{Architektur}
+
+Der Timing-Generator wird als Zustandsautomat implemetiert, der anhand des 5.6MHz Taktsignals, das auf dem Eingang \emph{CLK} liegt, seinen Zustand wechselt. Dabei werden in jedem Zustand alle Ausgänge passend gesetzt. Das \emph{RESET}-Signal sorgt dafür, dass alle Signale auf den Wert 0 gesetzt werden. Wir gehen davon aus, dass der SPDIF-Konverter, der vom Timing-Generator gesteuert wird, nur mit 16-bitigen Samples arbeitet.
+
+\section{Verhalten}
+
+\subsection{Lösungsvorschlag 1}
+
+Für die Entscheidung über einen Zustandsübergang werden drei Zähler angelegt. Sobald ein Zähler das Ende seines Wertebereiches erreicht, wird er mit der nächsten steigenden Flanke des \emph{CLK}-Signals wieder auf 0 gesetzt.
+
+\begin{itemize}
+\item {\bf SUBFRAME\_CLK\_C}: Dieser Zähler wird mit jeder steigenden Flanke des CLK-Signals inkrementiert und dient der Unterscheidung zwischen den Arten des zu generierenden Bits eines Subframes (Preambel-Bit, Audio Data Bit, V-Bit, U-Bit, P-Bit). Da die Größe eines Subframes 32 Bits beträgt und der Generator mit doppelter Frequenz getaktet ist, wird ein Subframe über 64 Takte generiert.\newline Wertebereich: 0-63.
+\item {\bf SUBFRAMES\_C}: Die Nummer eines Subframes innerhalb eines Frames. Wird inkrementiert sobald das Signal \emph{SUBFRAME\_CLK\_C} seinen Wert von 63 auf 0 wechselt.\newline Wertebereich: 0-1.
+\item {\bf FRAMES\_C}: Die Anzahl von Frames innerhalb eines Blocks. Wird inkrementiert sobald das Signal \emph{SUBFRAMES\_C} seinen Wert auf 0 wechselt (ein ganzes Frame wurde abgeschlossen). \newline Wertebereich: 0-191. 
+\end{itemize}
+
+\noindent
+Folgende Tabelle veranschaulicht die Steuerung der vorhandenen Ausgänge, deren Werte hauptsächlich vom Zustand des \emph{SUBFRAME\_CLK\_C} Zählers abhängen. Andere für die Schaltung entscheidende Zählerwerte werden in der Spalte "`Prozess"' genannt. Alle nicht beteiligten und nicht explizit auf 1 gesetzten Ausgänge werden auf den Wert 0 gesetzt.
+
+\begin{center}
+  \begin{longtable}{| c | p{2cm} | p{2.1cm} | p{5cm} |}
+    \hline
+	SUBFRAME\_CLK\_C & Subframe Teil & Beteiligte Ausgänge & Prozess \\
+    \hline
+	0..7 & Preambel & X,Y,Z & 
+    Wenn \emph{FRAMES\_C} = 0, dann wird Z auf 1 gesetzt. Anderenfalls gilt:\newline Wenn \emph{SUBFRAMES\_C} = 0 (erstes Subframe, linker Kanal), dann wird X auf 1 gesetzt.\newline Wenn \emph{SUBFRAMES\_C} = 1 (zweites Subframe, rechter Kanal), dann wird Y auf 1 gesetzt. \\
+    \hline
+	8..23 & Audio Data (Verschiebung) & SHIFTCLK & 
+    \emph{SHIFTCLK} wird über 16 Takte auf 1 gesetzt, um dem Data-Multiplexer zu signalisieren, dass das 16-bitige Sample um 8 Bit verschoben werden muss. \\
+    \hline
+	24..55 & Audio \newline Data & LOAD\_L LOAD\_R & 
+    Wenn \emph{SUBFRAMES\_C} = 0 (linker Kanal wird bearbeitet), dann wird \emph{LOAD\_L} auf 1 gesetz.\newline Anderenfalls (rechter Kanal wird bearbeitet) wird \emph{LOAD\_R} auf 1 gesetzt.  \\
+    \hline
+	56..61 & Zusätzliche Bits & START & 
+    In dieser Phase wird dem Subcode-Generator mit \emph{START} = 1 signalisiert, dass die User Data, Channel Status und Validity Bits generiert werden sollen.\\
+    \hline
+	62..63 & Parity-Bit & P &
+    Zum Abschluss soll der Biphase-Mark-Encoder das Parity-Bit generieren, was mit \emph{P} = 1 signalisiert wird. \\
+    \hline
+  \end{longtable}
+\end{center}
+
+\subsection{Lösungsvorschlag 2}
+
+Statt drei verschiedene Zähler zu verwalten, kann ein allgemeiner Zähler \emph{CLK\_C} verwendet werden, der jeden Takt inkrementiert wird. Die Werte der separaten Zähler können dann wie folgt berechnet werden:
+
+\begin{itemize}
+\item \emph{SUBFRAME\_CLK} = \emph{CLK\_C} mod 64.
+\item \emph{SUBFRAMES\_C} = (\emph{CLK\_C} mod 128) \(>\) 63.
+\item \emph{FRAMES\_C} = (\emph{CLK\_C} div 128) mod 192 (Blockgröße beträgt 192)
+\end{itemize}
+
+Wertebereich von \emph{CLK\_C}: 0-24575 \((2 * 64 * 192)\).
+
+
+\subsection{Bewertung der Ansätze}
+
+\begin{center}
+  \begin{tabular}{| l | p{6cm} | p{6cm} |}
+    \hline
+	 & Ansatz 1 & Ansatz 2 \\
+    \hline
+	 Vorteile &  
+     \begin{itemize}[leftmargin=0.4cm]
+		\item Geringerer Speicherbedarf: Aus den Wertebereichen der Zähler folgt, dass die notwendige Speichergröße 15 Bit beträgt.
+		\item Höhere Effizienz: Inkrement-Operation sehr günstig.
+	 \end{itemize}
+     &  
+     \begin{itemize}[leftmargin=0.4cm]
+		\item Einfachere Implementierung: Es müssen keine separaten Zähler mit Obergrenzenüberprüfung gehandhabt werden, da die mod-Operation sicherstellt, dass die entsprechenden Grenzen nicht überschritten werden.
+	 \end{itemize}
+     \\
+    \hline
+    
+	 Nachteile &
+     \begin{itemize}[leftmargin=0.4cm]
+		\item Beim Inkrementieren der Zähler muss jedes Mal ein Vergleich mit der Obergrenze durchgeführt werden.
+	 \end{itemize}
+     &
+     \begin{itemize}[leftmargin=0.4cm]
+        \item Geringere Effizienz: Die Operationen mod und div sind vergleichsweise sehr teuer.
+        \item Erhöhter Speicherbedarf: Der Zähler \emph{CLK\_C} benötigt zusätzliche 15 Bit Speicher.
+	 \end{itemize}
+     \\
+     \hline
+  \end{tabular}
+\end{center}
+
+\noindent
+Es wird Lösungsvorschlag 1 implementiert, da die Vorteile eindeutig überwiegen.
+
+\end{document}
