@@ -1,13 +1,14 @@
-0x3802 // mov 0x0000 r2
-0x0000
-0x0401 // mov r0 r1
-0x3202 // cmp [r0] r2
-0x8100 // jmpz imm
-0x000a // subtraction address
-0x4001 // inc r1
-0xb000 // jmp imm
-0x0004 // comparison address
-0x1410 // r1 = r1 - r0
+//r0 - Startadresse von zechenkette 
+0 0x3802 // mov 0x0000 r2
+1 0x0000
+2 0x0401 // mov r0 r1
+3 0x3202 // cmp [r0] r2
+4 0x8100 // jmpz 
+5 0x000a
+6 0x4001 // inc r1
+7 0xb000 // jmp imm
+8 0x0004 // comparison address
+9 0x1410 // r1 = r1 - r0
 
 
 
