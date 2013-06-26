@@ -1,4 +1,7 @@
 v 3
-file . "testbench.vhd" "20130625170612.000" "20130625190617.667":
-  entity testbench at 1( 0) + 0 on 57;
-  architecture v1 of testbench at 12( 214) + 0 on 58;
+file . "spdif_timing_gen.vhd" "20130626104557.000" "20130626124558.792":
+  entity spdif_timing_gen at 1( 0) + 0 on 341;
+  architecture v1 of spdif_timing_gen at 17( 371) + 0 on 342;
+file . "testbench.vhd" "20130626102848.000" "20130626124558.815":
+  entity testbench at 1( 0) + 0 on 343;
+  architecture v1 of testbench at 13( 246) + 0 on 344;

@@ -1,0 +1,4 @@
+#!/bin/sh
+ghdl -a spdif_timing_gen.vhd
+ghdl -a testbench.vhd
+ghdl -r testbench --wave=testbench.ghw --stop-time=30sec

@@ -5,6 +5,7 @@ use IEEE.numeric_std.all;
 entity testbench is
 end entity;
 
+-- ghdl -a spdif_timing_gen.vhd
 -- ghdl -a testbench.vhd
 -- ghdl -e testbench.vhd
 -- ghdl -r testbench --wave=testbench.ghw --stop-time=15sec
@@ -25,17 +26,35 @@ architecture v1 of testbench is
 	signal start_signal: std_logic;
 	signal p_bit: std_logic;
 
+	signal X, Y, Z, SHIFTCLK, LOAD_L, LOAD_R, START, P : std_logic;
+
 	constant clk_preiod : time := 1 ms; -- approx 1/(5.6*10^6) - 5.6 MHz
+
+	component spdif_timing_gen is
+		port (
+        CLK, RESET:     in  std_logic;
+
+        X, Y, Z:        out std_logic;
+        SHIFTCLK:       out std_logic;
+        LOAD_L, LOAD_R: out std_logic;
+        START:          out std_logic;
+        P:              out std_logic
+    	);
+    end component;
 begin
-	
+
+	--instantiate timing generator
+	STG: spdif_timing_gen port map (clk, reset, X, Y, Z, SHIFTCLK, LOAD_L, LOAD_R, START, P);
+
+	--initialize reset sequence
 	reset <= '1', '0' after clk_preiod/4;
 
 	--clk
 	process
 	begin
-		clk <= '0';
-		wait for clk_preiod/2;
 		clk <= '1';
+		wait for clk_preiod/2;
+		clk <= '0';
 		wait for clk_preiod/2;
 	end process;
 
