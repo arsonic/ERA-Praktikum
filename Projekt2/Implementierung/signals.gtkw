@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.47 (w)1999-2013 BSI
-[*] Wed Jun 26 11:29:10 2013
+[*] Wed Jun 26 12:11:29 2013
 [*]
 [dumpfile] "/Users/arsonic/LocalGIT/ERA-Praktikum/Projekt2/Implementierung/testbench.ghw"
-[dumpfile_mtime] "Wed Jun 26 11:19:58 2013"
-[dumpfile_size] 680921
+[dumpfile_mtime] "Wed Jun 26 12:11:03 2013"
+[dumpfile_size] 680923
 [savefile] "/Users/arsonic/LocalGIT/ERA-Praktikum/Projekt2/Implementierung/signals.gtkw"
-[timestart] 8587000000000000
+[timestart] 24438200000000000
 [size] 1093 600
 [pos] -1 -1
-*-49.268532 8915000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-46.268532 24618700000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top.
 [treeopen] top.testbench.
 [treeopen] top.testbench.stg.
@@ -17,7 +17,7 @@
 [signals_width] 193
 [sst_expanded] 1
 [sst_vpaned_height] 156
-@29
+@28
 [color] 2
 top.testbench.clk
 @22

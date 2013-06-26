@@ -24,18 +24,10 @@ begin
 
 
 
+    -- counters process
     process (CLK, RESET)
     begin
     if RESET = '1' then 
-        X   <= '0';
-        Y   <= '0';
-        Z   <= '1';
-        SHIFTCLK <= '0';
-        LOAD_L <= '0';
-        LOAD_R <= '0';
-        START <= '0';
-        P <= '0';
-    
         SUBFRAME_CLK_C <= (others => '0');
         SUBFRAMES_C <= '0';
         FRAMES_C <= (others => '0');
@@ -62,35 +54,52 @@ begin
 
             end if;
 
-        X   <= '0';
-        Y   <= '0';
-        Z   <= '0';
-        SHIFTCLK <= '0';
-        LOAD_L <= '0';
-        LOAD_R <= '0';
-        START <= '0';
-        P <= '0';
-        
-        if    SUBFRAME_CLK_C < 7 or SUBFRAME_CLK_C = 63 then
+    end if;
+    end process;
+
+    -- signals process
+    process(SUBFRAME_CLK_C)
+    begin
+        if RESET = '1' then
+            X   <= '0';
+            Y   <= '0';
+            --the very first tact has to have Z = 1 to mark the beginning of the new frame
+            Z   <= '1';
+            SHIFTCLK <= '0';
+            LOAD_L <= '0';
+            LOAD_R <= '0';
+            START <= '0';
+            P <= '0';
+            
+        elsif RESET = '0' then
+
+            --default values
+            X   <= '0';
+            Y   <= '0';
+            Z   <= '0';
+            SHIFTCLK <= '0';
+            LOAD_L <= '0';
+            LOAD_R <= '0';
+            START <= '0';
+            P <= '0';
+
+        if    SUBFRAME_CLK_C < 8 then
             --preamble
 
-            --check the normal subframe counter and the previous offseted one 
-            if (FRAMES_C = 191 and SUBFRAMES_C = '1' and SUBFRAME_CLK_C = 63) or 
-               (FRAMES_C = 0 and SUBFRAMES_C = '0' and  SUBFRAME_CLK_C < 7) then
+            --SUBFRAMES_C = '0', because frame contains 2 subframes and we want Z to be set for only the first one
+            if (FRAMES_C = 0 and SUBFRAMES_C = '0') then
                 Z  <= '1';
-            --check the normal subframe counter and the previous offseted one 
-            elsif (SUBFRAMES_C = '0' and SUBFRAME_CLK_C < 7) or 
-                  (SUBFRAME_CLK_C = 63 and SUBFRAMES_C = '1') then
+            elsif SUBFRAMES_C = '0' then
                 X <= '1';
-            else 
+            else
                 Y <= '1';
             end if;
 
-        elsif SUBFRAME_CLK_C < 23 then
+        elsif SUBFRAME_CLK_C < 24 then
             --audio data shifting:
             SHIFTCLK <= '1';
 
-        elsif SUBFRAME_CLK_C < 55  then
+        elsif SUBFRAME_CLK_C < 56  then
             --audio data
             if SUBFRAMES_C = '0' then
                 LOAD_L <= '1';
@@ -98,19 +107,18 @@ begin
                 LOAD_R <= '1';
             end if;
         
-        elsif SUBFRAME_CLK_C < 61 then
+        elsif SUBFRAME_CLK_C < 62 then
             --start
             START <= '1';
 
-        elsif SUBFRAME_CLK_C < 63 then
+        elsif SUBFRAME_CLK_C < 64 then
             --parity
             P <= '1';
 
         end if;
 
-    end if;
+        end if;
     end process;
-
     
 
 end v1;
