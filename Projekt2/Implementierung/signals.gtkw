@@ -1,0 +1,56 @@
+[*]
+[*] GTKWave Analyzer v3.3.47 (w)1999-2013 BSI
+[*] Wed Jun 26 11:29:10 2013
+[*]
+[dumpfile] "/Users/arsonic/LocalGIT/ERA-Praktikum/Projekt2/Implementierung/testbench.ghw"
+[dumpfile_mtime] "Wed Jun 26 11:19:58 2013"
+[dumpfile_size] 680921
+[savefile] "/Users/arsonic/LocalGIT/ERA-Praktikum/Projekt2/Implementierung/signals.gtkw"
+[timestart] 8587000000000000
+[size] 1093 600
+[pos] -1 -1
+*-49.268532 8915000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.testbench.
+[treeopen] top.testbench.stg.
+[sst_width] 198
+[signals_width] 193
+[sst_expanded] 1
+[sst_vpaned_height] 156
+@29
+[color] 2
+top.testbench.clk
+@22
+#{top.testbench.stg.subframe_clk_c[6:0]} top.testbench.stg.subframe_clk_c[6] top.testbench.stg.subframe_clk_c[5] top.testbench.stg.subframe_clk_c[4] top.testbench.stg.subframe_clk_c[3] top.testbench.stg.subframe_clk_c[2] top.testbench.stg.subframe_clk_c[1] top.testbench.stg.subframe_clk_c[0]
+@28
+[color] 1
+top.testbench.subframe
+@24
+#{top.testbench.stg.frames_c[7:0]} top.testbench.stg.frames_c[7] top.testbench.stg.frames_c[6] top.testbench.stg.frames_c[5] top.testbench.stg.frames_c[4] top.testbench.stg.frames_c[3] top.testbench.stg.frames_c[2] top.testbench.stg.frames_c[1] top.testbench.stg.frames_c[0]
+@28
+[color] 1
+top.testbench.frame
+top.testbench.stg.z
+top.testbench.stg.x
+top.testbench.stg.y
+[color] 1
+top.testbench.preamble
+top.testbench.stg.shiftclk
+[color] 1
+top.testbench.shift_clock
+top.testbench.stg.load_l
+top.testbench.stg.load_r
+[color] 1
+top.testbench.audio_data
+top.testbench.stg.start
+[color] 1
+top.testbench.start
+@24
+top.testbench.stg.p
+@28
+[color] 1
+top.testbench.p
+[color] 1
+top.testbench.block_signal
+[pattern_trace] 1
+[pattern_trace] 0

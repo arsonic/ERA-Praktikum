@@ -62,8 +62,6 @@ begin
 
             end if;
 
-
-
         X   <= '0';
         Y   <= '0';
         Z   <= '0';
@@ -74,15 +72,17 @@ begin
         P <= '0';
         
         if    SUBFRAME_CLK_C < 7 or SUBFRAME_CLK_C = 63 then
-            --preamble:
-            --FRAMES_C = 0 and 
-            -- FRAMES_C = 0 in the course of 2 SUBFRAMES_C -> we have to set it only for the first one
-            if FRAMES_C = 0 and SUBFRAMES_C = '0' then
-                Z <= '1';
-            elsif SUBFRAMES_C = '0' then
+            --preamble
+
+            --check the normal subframe counter and the previous offseted one 
+            if (FRAMES_C = 191 and SUBFRAMES_C = '1' and SUBFRAME_CLK_C = 63) or 
+               (FRAMES_C = 0 and SUBFRAMES_C = '0' and  SUBFRAME_CLK_C < 7) then
+                Z  <= '1';
+            --check the normal subframe counter and the previous offseted one 
+            elsif (SUBFRAMES_C = '0' and SUBFRAME_CLK_C < 7) or 
+                  (SUBFRAME_CLK_C = 63 and SUBFRAMES_C = '1') then
                 X <= '1';
-            --we have to change the value when SUBFRAMES_C changes (exactly at the moment when SUBFRAME_CLK_C = 63)
-            else
+            else 
                 Y <= '1';
             end if;
 
