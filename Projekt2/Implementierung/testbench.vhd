@@ -5,40 +5,37 @@ use IEEE.numeric_std.all;
 entity testbench is
 end entity;
 
--- ghdl -a spdif_timing_gen.vhd
--- ghdl -a testbench.vhd
--- ghdl -e testbench.vhd
--- ghdl -r testbench --wave=testbench.ghw --stop-time=15sec
-
 architecture v1 of testbench is
 	signal clk	: std_logic;
 	signal reset: std_logic;
 
-	--	 	    PARTS 
-	signal subframe: std_logic;
-	signal frame: std_logic;
-	signal block_signal: std_logic;
+	--data parts 
+	signal test_subframe: std_logic;
+	signal test_frame: std_logic;
+	signal test_block: std_logic;
 
-	--		SUBFRAME PARTS 
-	signal preamble: std_logic;
-	signal shift_clock: std_logic;
-	signal audio_data: std_logic;
-	signal start_signal: std_logic;
-	signal p_bit: std_logic;
+	--subframe parts
+	signal test_preamble: std_logic;
+	signal test_shiftclk: std_logic;
+	signal test_audio_data: std_logic;
+	signal test_start: std_logic;
+	signal test_p: std_logic;
 
+	--timing generator output signals
 	signal X, Y, Z, SHIFTCLK, LOAD_L, LOAD_R, START, P : std_logic;
 
-	constant clk_preiod : time := 1 ms; -- approx 1/(5.6*10^6) - 5.6 MHz
+	--clk signal period
+	constant clk_period : time := 1 ms;
 
 	component spdif_timing_gen is
 		port (
-        CLK, RESET:     in  std_logic;
-
-        X, Y, Z:        out std_logic;
-        SHIFTCLK:       out std_logic;
-        LOAD_L, LOAD_R: out std_logic;
-        START:          out std_logic;
-        P:              out std_logic
+        	CLK, RESET:     in  std_logic;
+	
+        	X, Y, Z:        out std_logic;
+        	SHIFTCLK:       out std_logic;
+        	LOAD_L, LOAD_R: out std_logic;
+        	START:          out std_logic;
+        	P:              out std_logic
     	);
     end component;
 begin
@@ -47,93 +44,99 @@ begin
 	STG: spdif_timing_gen port map (clk, reset, X, Y, Z, SHIFTCLK, LOAD_L, LOAD_R, START, P);
 
 	--initialize reset sequence
-	reset <= '1', '0' after clk_preiod*2;
+	reset <= '1', '0' after clk_period*2;
 
 	--clk
 	process
 	begin
 		clk <= '1';
-		wait for clk_preiod/2;
+		wait for clk_period/2;
 		clk <= '0';
-		wait for clk_preiod/2;
+		wait for clk_period/2;
 	end process;
 
-	--subframe
+	--TEST SIGNALS
+	--Test signals indicate the time spans, when the timing generator should output a specific kind of signal
+
+	--test_subframe: indicates each generated subframe
+	--64: length of a subframe in clocks 
 	process
 	begin
-		subframe <= '0';
-		wait for clk_preiod*64;
-		subframe <= '1';
-		wait for clk_preiod*64;
+		test_subframe <= '0';
+		wait for clk_period*64;
+		test_subframe <= '1';
+		wait for clk_period*64;
 	end process;
 
-	--frame
+	--test_frame: indicates each generated frame
 	process
 	begin
-		frame <= '0';
-		wait for clk_preiod*64*2;
-		frame <= '1';
-		wait for clk_preiod*64*2;
+		test_frame <= '0';
+		wait for clk_period*64*2;
+		test_frame <= '1';
+		wait for clk_period*64*2;
 	end process;
 
-	--block_signal
+	--test_block: indicates each generated block
 	process
 	begin
-		block_signal <= '0';
-		wait for clk_preiod*64*2*192;
-		block_signal <= '1';
-		wait for clk_preiod*64*2*192;
+		test_block <= '0';
+		wait for clk_period*64*2*192;
+		test_block <= '1';
+		wait for clk_period*64*2*192;
 	end process;
 
-	--preamble
+	--The following signals indicate when the appropriate signals inside each test_subframe should be generated
+
+	--test_preamble (X/Y/Z)
 	process
 	begin
-		preamble <= '1';
-		wait for clk_preiod*8;
-		preamble <= '0';
-		wait for clk_preiod*56;
+		test_preamble <= '1';
+		wait for clk_period*8;
+		test_preamble <= '0';
+		wait for clk_period*56;
 	end process;
 
-	--shift_clock
+	--test_shiftclk (SHIFTCLK)
 	process
 	begin
-		shift_clock <= '0';
-		wait for clk_preiod*8;
-		shift_clock <= '1';
-		wait for clk_preiod*16;
-		shift_clock <= '0';
-		wait for clk_preiod*40;
+		test_shiftclk <= '0';
+		wait for clk_period*8;
+		test_shiftclk <= '1';
+		wait for clk_period*16;
+		test_shiftclk <= '0';
+		wait for clk_period*40;
 	end process;
 
-	--audio_data
+	--test_audio_data (LOAD_L/LOAD_R)
 	process
 	begin
-		audio_data <= '0';
-		wait for clk_preiod*24;
-		audio_data <= '1';
-		wait for clk_preiod*32;
-		audio_data <= '0';
-		wait for clk_preiod*8;
+		test_audio_data <= '0';
+		wait for clk_period*24;
+		test_audio_data <= '1';
+		wait for clk_period*32;
+		test_audio_data <= '0';
+		wait for clk_period*8;
 	end process;
 
-	--p_bit
+	--test_start (START)
 	process
 	begin
-		start_signal <= '0';
-		wait for clk_preiod*56;
-		start_signal <= '1';
-		wait for clk_preiod*6;
-		start_signal <= '0';
-		wait for clk_preiod*2;
+		test_start <= '0';
+		wait for clk_period*56;
+		test_start <= '1';
+		wait for clk_period*6;
+		test_start <= '0';
+		wait for clk_period*2;
 	end process;
 
-	--p_bit
+	--test_p (P)
 	process
 	begin
-		p_bit <= '0';
-		wait for clk_preiod*62;
-		p_bit <= '1';
-		wait for clk_preiod*2;
+		test_p <= '0';
+		wait for clk_period*62;
+		test_p <= '1';
+		wait for clk_period*2;
 	end process;
 
-end v1 ; -- v1
+end v1 ;

@@ -22,8 +22,6 @@ architecture v1 of spdif_timing_gen is
 
 begin
 
-
-
     -- counters process
     process (CLK, RESET)
     begin
@@ -45,6 +43,7 @@ begin
 
                 --frames_counter
                 if SUBFRAMES_C = '1' then
+                    --FRAMES_C should change the value as soon as the second subframe has been generated
                     if FRAMES_C < 191 then
                         FRAMES_C <= FRAMES_C + 1;
                     else
@@ -63,7 +62,7 @@ begin
         if RESET = '1' then
             X   <= '0';
             Y   <= '0';
-            --the very first tact has to have Z = 1 to mark the beginning of the new block
+            --the very first clock has to have Z = 1 to mark the beginning of the new block on initialization
             Z   <= '1';
             SHIFTCLK <= '0';
             LOAD_L <= '0';
@@ -73,7 +72,7 @@ begin
             
         elsif RESET = '0' then
 
-            --default values
+            --default values - each clock only one of the following signals should have the value 1 -> set the default values = 0
             X   <= '0';
             Y   <= '0';
             Z   <= '0';
