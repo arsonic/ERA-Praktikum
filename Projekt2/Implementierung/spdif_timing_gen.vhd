@@ -63,7 +63,7 @@ begin
         if RESET = '1' then
             X   <= '0';
             Y   <= '0';
-            --the very first tact has to have Z = 1 to mark the beginning of the new frame
+            --the very first tact has to have Z = 1 to mark the beginning of the new block
             Z   <= '1';
             SHIFTCLK <= '0';
             LOAD_L <= '0';

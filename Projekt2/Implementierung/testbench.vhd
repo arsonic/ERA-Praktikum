@@ -47,7 +47,7 @@ begin
 	STG: spdif_timing_gen port map (clk, reset, X, Y, Z, SHIFTCLK, LOAD_L, LOAD_R, START, P);
 
 	--initialize reset sequence
-	reset <= '1', '0' after clk_preiod/4;
+	reset <= '1', '0' after clk_preiod*2;
 
 	--clk
 	process
