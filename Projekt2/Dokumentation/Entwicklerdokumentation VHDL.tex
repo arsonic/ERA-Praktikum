@@ -1,0 +1,106 @@
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{lastpage}
+
+
+\title{Entwicklerdokumentation VHDL}
+\author{Amar Saljic, Arseniy Vershinin, Jonathan Kienzle}
+\date{12. Juli 2013}
+
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[RE,LO]{\emph{Entwicklerdokumentation VHDL - Gruppe 50}}
+\renewcommand{\headrulewidth}{0pt} % no line in header area
+\fancyfoot{} % clear all footer fields
+\fancyfoot[LE,RO]{\thepage /\pageref{LastPage}}           % page number in "outer" position of footer line
+%\fancyfoot[RE,LO]{\emph{Entwicklerdokumentation VHDL - Gruppe 50}} % other info in "inner" position of footer line
+
+\begin{document}
+\maketitle
+
+\thispagestyle{fancy}
+
+\section{Übersicht}
+
+Der Timing Generator wurde als Zustandsautomat implemetiert, der anhand eines Taktsignals, welches auf den \emph{CLK}-Eingang gelegt wird, seinen Zustand wechselt. Dabei werden in jedem Zustand alle Ausgänge passend gesetzt. Das \emph{RESET}-Signal sorgt dafür, dass alle Signale auf ihren Startwert zurückgesetzt werden.
+
+\section{Implementierung}
+
+\subsection{Signalbeschreibung}
+
+Für die Entscheidung über einen Zustandsübergang wurden drei Zähler angelegt. Sobald ein Zähler das Ende seines Wertebereiches erreicht, wird er mit der nächsten steigenden Flanke des \emph{CLK}-Signals wieder auf 0 gesetzt.
+
+\begin{itemize}
+\item {\bf SUBFRAME\_CLK\_C}: Dieser Zähler wird mit jeder steigenden Flanke des \emph{CLK}-Signals inkrementiert und dient der Unterscheidung zwischen den Arten des zu generierenden Bits eines Subframes (Preambel-Bit, Audio Data Bit, V-Bit, U-Bit, P-Bit). Da die Größe eines Subframes 32 Bits beträgt und der Generator mit doppelter Frequenz getaktet ist, wird ein Subframe über 64 Takte generiert.\newline Wertebereich: 0-63.
+\item {\bf SUBFRAMES\_C}: Die Nummer eines Subframes innerhalb eines Frames. Wird inkrementiert sobald das Signal \emph{SUBFRAME\_CLK\_C} seinen Wert von 63 auf 0 wechselt.\newline Wertebereich: 0-1.
+\item {\bf FRAMES\_C}: Die Anzahl von Frames innerhalb eines Blocks. Wird inkrementiert sobald das Signal \emph{SUBFRAMES\_C} seinen Wert auf 0 wechselt (ein ganzes Frame wurde abgeschlossen). \newline Wertebereich: 0-191. 
+\end{itemize}
+
+\noindent
+Folgende Tabelle veranschaulicht die Steuerung der vorhandenen Ausgänge, deren Werte hauptsächlich vom Zustand des \emph{SUBFRAME\_CLK\_C} Zählers abhängen. Andere für die Schaltung entscheidende Zählerwerte werden in der Spalte "`Prozess"' genannt. Alle nicht beteiligten und nicht explizit auf 1 gesetzten Ausgänge werden auf den Wert 0 gesetzt.
+
+\begin{center}
+  \begin{longtable}{| c | p{2cm} | p{2.1cm} | p{5cm} |}
+    \hline
+	SUBFRAME\_CLK\_C & Subframe Teil & Beteiligte Ausgänge & Prozess \\
+    \hline
+	0..7 & Preambel & X,Y,Z & 
+    Wenn \emph{FRAMES\_C} = 0, dann wird Z auf 1 gesetzt. Anderenfalls gilt:\newline Wenn \emph{SUBFRAMES\_C} = 0 (erstes Subframe, linker Kanal), dann wird X auf 1 gesetzt.\newline Wenn \emph{SUBFRAMES\_C} = 1 (zweites Subframe, rechter Kanal), dann wird Y auf 1 gesetzt. \\
+    \hline
+	8..23 & Audio Data (Verschiebung) & SHIFTCLK & 
+    \emph{SHIFTCLK} wird über 16 Takte auf 1 gesetzt, um dem Data-Multiplexer zu signalisieren, dass das 16-bitige Sample um 8 Bit verschoben werden muss. \\
+    \hline
+	24..55 & Audio \newline Data & LOAD\_L LOAD\_R & 
+    Wenn \emph{SUBFRAMES\_C} = 0 (linker Kanal wird bearbeitet), dann wird \emph{LOAD\_L} auf 1 gesetz.\newline Anderenfalls (rechter Kanal wird bearbeitet) wird \emph{LOAD\_R} auf 1 gesetzt.  \\
+    \hline
+	56..61 & Zusätzliche Bits & START & 
+    In dieser Phase wird dem Subcode-Generator mit \emph{START} = 1 signalisiert, dass die User Data, Channel Status und Validity Bits generiert werden sollen.\\
+    \hline
+	62..63 & Parity-Bit & P &
+    Zum Abschluss soll der Biphase-Mark-Encoder das Parity-Bit generieren, was mit \emph{P} = 1 signalisiert wird. \\
+    \hline
+  \end{longtable}
+\end{center}
+
+\subsection{Architektur}
+
+Die Kontrolle der Zähler und die Logik der Ausgangssignalgenerierung wurde in zwei verschiedene Prozesse aufgeteilt, was folgende Vorteile bietet:
+\begin{itemize}
+\item Erleichterte Fehlersuche durch saubere Trennung der zwei Mechanismen
+\item Die Ausgangssignale können ohne Verzögerung genau dann aktualisiert werden, wenn sich \emph{SUBFRAME\_CLK\_C} ändert. Würde man alles innerhalb eines Prozesses handhaben, so wäre die Generierung der Ausgangssignale immer um einen Takt verzögert, da sie vom aktuellen Stand der Zähler abhängt, welche jedoch erst nach Abschluss des Prozesses ihren aktualisierten Wert erhalten. Dies müsste man mit zusätzlichen Überprüfungen der verschiedenen Zählerstände ausgleichen, um die regelmäßig auftretende Zählerzurücksetzung (Zähler hat Maximum erreicht und wird wieder auf 0 gesetzt) innerhalb des aktuellen Taktes zu erkennen.
+\end{itemize}
+
+
+\subsection{Anmerkungen}
+\begin{itemize}
+\item Bei einem RESET fällt auf, dass der Z-Ausgang als einziges Signal auf ‘1’ gesetzt wird. Dies liegt daran, dass Z den Start eines neuen Blocks kennzeichnet, welcher ohne Verzögerung direkt mit dem ersten Takt beginnt.
+\item Wir gehen davon aus, dass der S/PDIF-Konverter, der vom Timing Generator gesteuert wird, nur mit 16-bitigen Samples arbeitet.
+\end{itemize}
+
+\section{Tests}
+
+Der Testbench enthält ein \emph{clk}, \emph{reset} und 8 weitere \emph{test\_}* Signale. Die Komponente \emph{spdif\_timing\_gen} ist der zu testende Timing Generator.\newline
+\newline
+Zu Beginn des Tests wird der \emph{RESET}-Port des Timing Generators für zwei Taktzyklen auf ‘1’ gesetzt, wodurch seine Initialisierung auf Korrektheit geprüft werden kann.\newline
+Zusätzlich wird das für die Testsignalgenerierung verwendete \emph{clk}-Signal auf den \emph{CLK}-Port des Timing Generators gelegt. Die verwendete Taktfrequenz, welche durch die Konstante \emph{clk\_period} vorgegeben wird, ist im Test nicht entscheidend, da die korrekte Funktionalität des Timing Generators ausschließlich von der Anzahl der Takte abhängt.\newline
+Im Test wird zu jedem zu generierenden Ausgangssignal ein Testsignal \emph{test\_}* generiert, welches vorgibt zu welchem Zeitpunkt ein entsprechendes Signal vom Timing Generator erwartet wird. Dabei wurden die Signale \emph{LOAD\_L} und \emph{LOAD\_R} zu einem Testsignal \emph{test\_audio\_data} und die Signale \emph{X}, \emph{Y} und \emph{Z} zu einem Testsignal \emph{test\_preamble} zusammengefasst. So ist es in GTKWave visuell möglich anhand der Testsignale und der Spezifikation sicherzustellen, dass alle Ausgangssignale tatsächlich zum korrekten Zeitpunkt auf ‘1’ gesetzt werden.
+
+\section{Alternativer Lösungsansatz}
+
+\begin{enumerate}
+\item Statt drei verschiedene Zähler zu verwalten, könnte ein allgemeiner Zähler \emph{CLK\_C} verwendet werden, welcher jeden Takt inkrementiert wird. Die Werte der separaten Zähler können dann mithilfe der mod- und div-Operationen entsprechend der Spezifikation berechnet werden.
+Wir haben uns für die Implementierung mit drei separaten Zählern entschieden, da wir so 15 Bit weniger Speicher benötigen. \newline
+Sollte die Größe des Bausteins entscheidend sein, so wäre es sinnvoll direkt die Synthetisierungen beider Implementierungen zu vergleichen, um so eine Entscheidung treffen zu können.
+
+\item Es wäre möglich die gesamte Logik innerhalb eines Prozesses handzuhaben, wodurch jedoch die im Punkt “Architektur” genannten Vorteile verloren gingen.
+\end{enumerate}
+
+\end{document}

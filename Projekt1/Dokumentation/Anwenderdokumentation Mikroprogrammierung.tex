@@ -1,0 +1,126 @@
+%
+% Hello! Here's how this works:
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+% If you're new to LaTeX, the wikibook at
+% http://en.wikibooks.org/wiki/LaTeX
+% is a great place to start, and there are some examples in this
+% document, too.
+%
+% Enjoy!
+%
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{lastpage}
+\usepackage[bottom]{footmisc}
+\usepackage{listings}
+\usepackage{rotating}
+\usepackage{changepage}   % for the adjustwidth environment
+\usepackage[parfill]{parskip}
+\usepackage[table]{xcolor}
+
+\title{Anwenderdokumentation Mikroprogrammierung}
+\author{Amar Saljic, Arseniy Vershinin, Jonathan Kienzle}
+\date{12. Juli 2013}
+
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[RE,LO]{\emph{Anwenderdokumentation Mikroprogrammierung - Gruppe 50}}
+\renewcommand{\headrulewidth}{0pt} % no line in header area
+\fancyfoot{} % clear all footer fields
+\fancyfoot[LE,RO]{\thepage /\pageref{LastPage}}           % page number in "outer" position of footer line
+%\fancyfoot[RE,LO]{\emph{Anwenderdokumentation Mikroprogrammierung - Gruppe 50}} % other info in "inner" position of footer line
+
+\begin{document}
+\definecolor{lightgray}{gray}{0.9}
+\maketitle
+
+\thispagestyle{fancy}
+
+\section{Übersicht}
+
+Das Programm \emph{strlen}, welches die Länge einer Zeichenkette in Zeichen ermittelt, wurde auf zwei Arten implementiert:
+\begin{enumerate}
+\item Als Maschinenprogramm
+\item Als spezieller Maschinenbefehl in einem gesonderten Mikroprogramm
+\end{enumerate}
+Die zu zählende Zeichenkette liegt im Unicode-Format (16 bit pro Zeichen) im Hauptspeicher und das abschließende Nullzeichen (0x0000) wird nicht mitgezählt.
+
+\section{Black-Box Beschreibung}
+
+\subsection{Maschinenprogramm}
+ 	
+Das Maschinenprogramm belegt im Hauptspeicher den Adressbereich 0x0000 - 0x0009. Um die Länge einer Unicode-Zeichenkette zu ermitteln, muss das Programm folgendermaßen eingesetzt werden:
+
+\emph{Vorbedingungen:}
+\begin {enumerate}
+\item Maschinenbefehlszähler ist auf 0 gesetzt.
+\item Register \emph{r0} enthält die Startadresse der Zeichenkette.
+\end{enumerate}
+
+\emph{Ausgabe:} Register \emph{r0} enthält die Länge der Zeichenkette.
+
+\subsection{Mikroprogramm}
+Das Mikroprogramm belegt im Mikroprogrammspeicher den Adressbereich 0x100 - 0x105. Die Startadresse entspricht also dem Opcode 10. Um die Länge einer Unicode-Zeichenkette zu ermitteln, muss das Programm folgendermaßen eingesetzt werden:
+
+\emph{Vorbedingungen:}
+\begin {enumerate}
+\item Register \emph{ra} enthält die Startadresse der Zeichenkette.
+\item Die Nummer des Registers \emph{ra} ist dem Mikroprogramm als Quellopearand (RA) zu übergeben. Der Wert des Zieloperanden (RB) hat keinen Einfluss auf das Ergebnis. 
+\end{enumerate}
+
+\emph{Ausgabe:} Register \emph{r1} enthält die Länge der Zeichenkette.
+
+\vspace{0.3cm}
+\emph{Anmerkung}:
+\begin {itemize}
+\item Register \emph{r1} darf nicht als Quellopearand (RA) übergeben werden, da es als Ergebnis-Register eingesetzt wird.
+\end{itemize}
+
+\section{Beispielszenarien}
+
+%--------------------------------------------------------
+\subsection{Maschinenprogramm}
+\emph{Ziel}: Bestimmung der Länge der Zeichenkette 'Affe', welche ab Adresse 0x000B im Hauptspeicher liegt.
+
+\emph{Schritte}:
+
+\begin {enumerate}
+\item Maschinenbefehlszähler auf 0 setzen.
+\item Register \emph{r0} auf den Wert 0x000B (Startadresse der Zeichenkette) setzen.
+\item Das Programm solange laufen lassen, bis der Maschinenbefehlszähler den Wert 0x000A erreicht (Ende des Programms).
+\end{enumerate}
+
+\emph{Ergebnis:} \emph{r1} enthält den Wert 4.
+
+%--------------------------------------------------------
+\subsection{Mikroprogramm}
+
+\emph{Ziel}: Bestimmung der Länge der Zeichenkette 'Elefant', welche ab Adresse 0x000D im Hauptspeicher liegt. Die Startadresse der Zeichenkette liegt in Register \emph{r2}. Der Mikroprogrammaufruf soll in der Hauptspeicherzelle 0x000B stehen.
+
+\emph{Schritte}:
+
+\begin {enumerate}
+\item Maschinenbefehlszähler auf 0x000B setzen.
+\item Dem Mikroprogramm \emph{r2} als Quelloperanden (RA) übergeben: Inhalt der Speicherzelle 0x000B auf 0x1020 setzen.
+\item IFETCH ausführen.
+\end{enumerate}
+
+\emph{Ergebnis:} \emph{r1} enthält den Wert 7.
+
+\end{document}
